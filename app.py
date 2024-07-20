@@ -10,15 +10,18 @@ posts = {
         "title": "My dog with 2 balls in his mouth",
         "link": "https://imgur.com/gallery/im-18-624-points-from-glorious-so-heres-picture-of-dog-with-two-his-mouth-XgbZdeA",
         "username": "user98",
-        "comments": [
-            {
-                "id": 0,
-                "upvotes": 8,
-                "text": "Thanks for my first Reddit gold!",
-                "username": "user98",
-            }
-        ],
+
     }
+}
+
+comments = {
+    0:{
+        "id": 0,
+        "post_id": 0, 
+        "upvotes": 8,
+        "text": "Thanks for my first Reddit gold!",
+        "username": "user98",
+        }
 }
 
 comment_id_counter = 1
@@ -66,22 +69,13 @@ def create_post():
         "title": data["title"],
         "link": data["link"],
         "username": data["username"],
-        "comments": []
     }
     
     # add new post to our dictionary (aka db)
     posts[post_id_counter] = post
     post_id_counter += 1
-
-    post_data = {
-        "id": post['id'],
-        "upvotes": post['upvotes'],
-        "title": post["title"],
-        "link": post["link"],
-        "username": post["username"],
-    }
     
-    return jsonify(post_data), 201
+    return jsonify(post), 201
 
 
 @app.route("/api/posts/<int:id>/", methods=["GET"])
@@ -124,7 +118,7 @@ def delete_post(id):
 def upvote_post(id):
     # Increment upvotes on a specific post (default +1)
     if id not in posts:
-        return jsonify({"error": "Post not found"}), 404
+       return jsonify({"error": "Post not found"}), 404
     
     upvote_offset = 1 # default
     if request.data:
@@ -157,15 +151,53 @@ def upvote_post(id):
  
 @app.route("/api/posts/<int:id>/comments/", methods=["GET"])
 def get_comments(id):
-    # Get the list of comments for a specific post  
-    pass
+        # Return list of all posts present
+    comments_list = []
+    for comment in comments.values():
+        if comment['post_id'] == id:
+            #copy of comment without post_id
 
+            comment_data = {
+                'id': comment['id'],
+                'upvotes': comment['upvotes'],
+                'text': comment['text'],
+                'username': comment['username'],
+            }
+            comments_list.append(comment_data)
+    
+    return jsonify({"comments": comments_list}), 200
+ 
 
 @app.route("/api/posts/<int:id>/comments/", methods=["POST"])
 def create_comment(id):
-    # Post a comment for a specific post
-    pass
 
+    if id not in posts:
+        return jsonify({"error": "Post not found"}), 404
+
+
+    global comment_id_counter
+
+    data = request.json
+
+    field_list = ["text", "username"]
+    if not all(key in data for key in field_list):
+        return jsonify({"error": "Missing fields in request"}), 400
+
+    
+    comment = {
+
+        "id": comment_id_counter,
+        "post_id": id,
+        "text": data["text"],
+        "username": data["username"],
+    }
+
+
+    comments[comment_id_counter] = comment
+    comment_id_counter += 1
+
+    return jsonify(comment), 201
+    
 
 @app.route("/api/posts/<int:pid>/comments/<int:cid>/", methods=["POST"])
 def edit_comment(pid, cid):
