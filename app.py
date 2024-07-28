@@ -201,10 +201,37 @@ def create_comment(id):
 
 @app.route("/api/posts/<int:pid>/comments/<int:cid>/", methods=["POST"])
 def edit_comment(pid, cid):
-    # Edit a specific comment on a specific post 
-    pass
+
+    if pid not in posts:
+        return jsonify({"error": "Post not found"}), 404
+    if cid not in comments:
+        return jsonify({"error": "Comment not found"}), 404
+    
+    data = request.json
+
+    field_list = ["text"]
+    if not all(key in data for key in field_list):
+        return jsonify({"error": "Missing fields in request"}), 400
+    
+    comment = comments[cid]
+
+    if comment["post_id"] != pid:
+        return jsonify({"error": "Comment not for this post"}), 400
+    
+    comment['text'] = data['text']
 
 
+    comments[cid] = comment
+
+
+    comment_data = {
+        'id': comment['id'],
+        'upvotes': comment['upvotes'],
+        'text' : comment['text'],
+        'username': comment['username'],
+    }
+
+    return jsonify(comment_data), 200
 
 
 if __name__ == "__main__":
