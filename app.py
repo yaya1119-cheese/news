@@ -6,7 +6,7 @@ app = Flask(__name__)
 posts = {
     0: {
         "id": 0,
-        "upvotes": 1,
+        "upvotes": 8,
         "title": "My dog with 2 balls in his mouth",
         "link": "https://imgur.com/gallery/im-18-624-points-from-glorious-so-heres-picture-of-dog-with-two-his-mouth-XgbZdeA",
         "username": "user98",
@@ -45,6 +45,32 @@ def get_all_posts():
         posts_list.append(post_data)
     
     return jsonify({"posts": posts_list}), 200
+
+
+@app.route("/api/posts/ordered", methods=["GET"])
+def get_all_posts_ordered():
+
+
+    ordering = request.args.get("ordering", "dec")
+
+    parameter_list = ["dec", "inc"]
+    if ordering not in parameter_list:
+        return jsonify({"error": "invalid "}), 400
+    
+    post_list = list(posts.values())
+
+    def sort_value_post(post):
+        return post['upvotes']
+    
+    if ordering == "dec":
+        post_list.sort(key=sort_value_post, reverse=True)
+    else:
+        post_list.sort(key=sort_value_post)
+
+    return jsonify(post_list), 200
+
+
+
 
 
 @app.route("/api/posts/", methods=["POST"])
